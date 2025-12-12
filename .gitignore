@@ -1,0 +1,20 @@
+# Virtual environment
+venv/
+
+# Serving artifacts (BentoML, generated files, runtime state)
+serving/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Large datasets
+data/raw/
+data/processed/
+
+# MLflow runs (keep structure, not artifacts)
+mlruns/

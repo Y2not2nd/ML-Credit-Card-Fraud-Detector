@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fraud Detection</title>
+</head>
+<body>
+    <h1>Upload Credit Card Transactions CSV</h1>
+    <form id="uploadForm" method="post" action="/predict">
+        <input type="file" id="fileInput" />
+        <input type="hidden" name="file" id="hiddenFile" />
+        <button type="submit">Upload</button>
+    </form>
+
+    <script>
+        const fileInput = document.getElementById("fileInput");
+        const hiddenFile = document.getElementById("hiddenFile");
+
+        fileInput.addEventListener("change", () => {
+            const reader = new FileReader();
+            reader.onload = () => hiddenFile.value = reader.result;
+            reader.readAsDataURL(fileInput.files[0]);
+        });
+    </script>
+</body>
+</html>
