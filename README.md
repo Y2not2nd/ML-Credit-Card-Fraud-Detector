@@ -1,6 +1,8 @@
 
 # Credit Card Fraud Detection — End-to-End MLOps (Local)
 
+![Architecture diagram](images/fe.png)
+
 
 ![Architecture diagram](MLflow.png)
 
