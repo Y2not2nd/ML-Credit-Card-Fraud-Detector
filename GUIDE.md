@@ -331,37 +331,6 @@ git push -u origin main
 **Issue:** Prometheus couldn’t find config file
 **Solution:** Passed absolute path via `--config.file`
 
----
 
-### 9. GitHub file size limits
 
-**Issue:** CSVs and MLflow artifacts exceeded 100MB
-**Solution:** Removed from Git, added to `.gitignore`, recommitted clean history
 
----
-
-### 10. Branch confusion (`master` vs `main`)
-
-**Issue:** Work committed to wrong branch
-**Solution:** Reinitialised repo cleanly and pushed correct branch
-
----
-
-## Final note
-
-This project reflects what actually happens when building ML systems:
-
-* real datasets
-* real infrastructure limits
-* real tooling friction
-
-The value is not just the trained model, but the **understanding of how the pieces fit together** and where systems fail if you don’t respect scale, interfaces, and observability.
-
-This is a complete, end-to-end baseline that can now evolve into:
-
-* scheduled training
-* automated CI/CD
-* cloud deployment
-* model version comparison in production
-
-When you’re ready, the next iteration should focus on **automation and deployment**, not new algorithms.
