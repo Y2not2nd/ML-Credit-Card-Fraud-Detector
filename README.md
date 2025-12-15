@@ -4,7 +4,7 @@
 ![Architecture diagram](images/fe.png)
 
 
-![Architecture diagram](images/Mlflow.png)
+![Architecture diagram](images/MLflow.png)
 
 ## Overview
 
