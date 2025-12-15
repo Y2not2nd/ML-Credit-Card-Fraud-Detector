@@ -204,13 +204,3 @@ This step was taken deliberately to reduce cost, limit external dependencies, an
 * deployment and rollout mechanics
 
 By addressing these concerns locally, the system is better positioned to transition into a managed environment such as EKS with fewer unknowns and tighter control over configuration and behaviour.
-
----
-
-## Final note
-
-This project is intentionally end to end and local, but it reflects real production concerns closely.
-
-The value is not in the model alone, but in understanding how data, models, APIs, observability, and deployment considerations interact as a system.
-
-The current state represents a stable foundation, with ongoing work focused on lifecycle maturity and deployment preparation rather than basic functionality or connectivity.
