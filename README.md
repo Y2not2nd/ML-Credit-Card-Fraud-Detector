@@ -6,85 +6,93 @@
 
 ![Architecture diagram](MLflow.png)
 
+## Overview
+
+This project implements an end-to-end credit card fraud detection system designed to behave like a real machine learning service rather than a standalone model or notebook.
+
+It covers the full lifecycle of an ML system, from data preparation and classification, through experiment tracking and model serving, to observability and operational constraints. While the system runs locally, the design choices mirror production environments closely, making it a practical foundation for cloud-native deployments.
+
+The emphasis is on how data, models, APIs, and monitoring work together as a system, not just on achieving a particular accuracy score.
+
+---
+
 ## Tech stack
 
 This project is built using the following technologies:
 
 * **Python 3.10**
-  Used for data preparation, model training, evaluation, and serving.
+  Used for data preparation, feature handling, model training, evaluation, and serving logic.
 
 * **scikit-learn**
   Used to train a binary classification model for fraud detection.
 
-* **pandas & NumPy**
-  Used for data manipulation, preprocessing, and feature handling.
+* **pandas and NumPy**
+  Used for data manipulation, preprocessing, transformation, and batch handling.
 
 * **MLflow**
-  Used to track experiments, parameters, metrics, and model artifacts during training.
+  Used to track experiments, parameters, metrics, and model artifacts, enabling reproducibility and traceability across training runs.
 
 * **BentoML**
-  Used to package the trained model and serve it as a production-style HTTP inference service.
+  Used to package the trained model and expose it as a production-style HTTP inference service with defined request and response schemas.
 
 * **Streamlit**
-  Used as a lightweight UI to upload CSV files and run batch predictions locally.
+  Used as a lightweight user interface to upload CSV files and trigger batch predictions.
 
 * **Prometheus**
-  Used to scrape and store inference-level metrics from the BentoML service.
+  Used to scrape inference-level metrics directly from the BentoML service.
 
 * **Grafana**
-  Used to visualise request rates, latency, and service behaviour over time.
+  Used to visualise traffic patterns, latency, and service behaviour over time.
 
 ---
 
 ## Why I built this
 
-I didn’t want to build another fraud detection notebook that trains a model once and stops there.
+This project started as a learning-focused exercise alongside ML and MLOps coursework.
 
-Fraud detection is interesting not because the classification problem is novel, but because **how the model is trained, deployed, observed, and interacted with** matters just as much as accuracy.
+The goal was to understand the full machine learning lifecycle in practice, not just how to train a model, but how data is collected and transformed, how models are evaluated and optimised, how they are deployed and served, and how operational concerns like scaling, governance, data protection, and access control come into play once a model is running.
 
-This project focuses on the **operational reality of machine learning**, not just the modelling step. In real systems, models:
+Rather than treating these topics independently, the intent was to see how they connect end to end. How design decisions made early in data preparation affect model behaviour later, how models behave once exposed behind APIs, and how observability and reliability become just as important as predictive performance.
 
-* receive data in batches and streams
-* need to be served behind APIs
-* must be observable when things go wrong
-* must handle scale and payload limits
-* are evaluated continuously, not once
+Building the system locally made it possible to explore these ideas in a controlled environment, while still structuring the project as if it were intended for production use.
 
-The goal here was to build something that behaves like a real ML service, even when running locally.
+This approach naturally led to building the project end to end and evolving it step by step, focusing on system behaviour, constraints, and trade-offs rather than isolated modelling tasks.
+
+I’ve since applied the same principles to a fully end-to-end implementation on AWS, incorporating cloud-native infrastructure, managed services, security controls, and scalable deployment patterns. This local project serves as the conceptual and architectural foundation for that work, keeping the core ML and MLOps ideas clear before introducing cloud complexity.
 
 ---
 
-## What this project is doing
+## What this project does
 
-At a high level, this project builds a **binary fraud detection system** that can score large batches of credit card transactions through an API.
+At a high level, this project builds a **binary fraud detection system** capable of scoring large batches of credit card transactions through an API.
 
-The flow looks like this:
+The overall flow is:
 
-1. A historical credit card dataset is prepared and split into train and test sets
-2. A binary classifier is trained and evaluated
-3. Experiments and metrics are tracked using MLflow
-4. The trained model is registered and served using BentoML
+1. A historical credit card transaction dataset is prepared and split into training and test sets
+2. A binary classification model is trained and evaluated
+3. Experiments, parameters, and metrics are tracked using MLflow
+4. The trained model is registered and packaged using BentoML
 5. A user uploads a CSV file through a UI
 6. The data is sent to the BentoML service for inference
 7. Fraud probabilities are returned and displayed
 8. Inference traffic and latency are monitored via Prometheus and Grafana
 
-The emphasis is not just on prediction, but on **end-to-end behaviour**.
+The focus is not just on producing predictions, but on how the system behaves end to end under realistic usage patterns.
 
 ---
 
-## Why batch inference and not single requests
+## Why batch inference
 
-Fraud detection systems often need to score **large volumes of transactions**:
+Fraud detection systems commonly need to score **large volumes of transactions**, for example:
 
 * historical backfills
 * delayed processing
 * investigations
 * audits
 
-Serving only single-row predictions hides real-world constraints such as payload size, memory usage, and request latency under load.
+Serving only single-row predictions hides real-world constraints such as payload size, memory usage, request latency, and service saturation under load.
 
-This project intentionally supports batch inference to surface those constraints early, rather than pretending they don’t exist.
+This project intentionally supports batch inference so those constraints are visible early. It makes performance, resource usage, and latency trade-offs explicit rather than abstract.
 
 ---
 
@@ -92,42 +100,41 @@ This project intentionally supports batch inference to surface those constraints
 
 The dataset used is a real, anonymised credit card transaction dataset with PCA-transformed features.
 
-While the feature names are abstract, the structure reflects real fraud detection challenges:
+Although the feature names are abstract, the data structure reflects real fraud detection challenges:
 
 * extreme class imbalance
-* subtle signal separation
-* high false-positive cost
-* probabilistic decision-making
+* subtle separation between normal and fraudulent behaviour
+* high cost of false positives
+* probabilistic rather than deterministic decision-making
 
-The model outputs **fraud probabilities**, not hard decisions. This mirrors how real systems operate, where thresholds are applied downstream based on risk tolerance rather than fixed labels.
+The model outputs **fraud probabilities**, not hard classifications. This mirrors how production systems operate, where thresholds are applied downstream based on risk tolerance, business rules, or human review processes.
 
 ---
 
-## Why BentoML
+## Model serving with BentoML
 
-BentoML was chosen to make the model behave like a **production service**, not a script.
+BentoML is used to ensure the model behaves like a service, not a script.
 
-Using BentoML forces you to think about:
+Using BentoML introduces considerations that are central to production systems, including:
 
-* request schemas
-* response formats
-* payload sizes
-* concurrency
-* observability
+* request and response schemas
+* payload sizing and batch limits
+* concurrency and execution behaviour
 * API stability
+* observability hooks
 
-The service exposes both:
+The service exposes:
 
-* a `/predict` endpoint for inference
+* a `/predict` endpoint for batch inference
 * a `/metrics` endpoint for monitoring
 
-This makes it possible to treat the model like a real system component rather than a one-off artifact.
+This allows the model to be treated as a first-class system component rather than a one-off artifact.
 
 ---
 
-## Observability with Prometheus and Grafana
+## Observability and monitoring
 
-A key goal of this project was to make the model **observable**, not just functional.
+A key objective of this project was to make the system **observable**, not just functional.
 
 Prometheus scrapes metrics directly from the BentoML service, including:
 
@@ -136,29 +143,45 @@ Prometheus scrapes metrics directly from the BentoML service, including:
 * in-flight requests
 * runner execution timing
 
-Grafana is used to visualise these metrics over time, answering questions such as:
+Grafana visualises these metrics over time, making it possible to answer questions such as:
 
 * Is traffic reaching the model?
-* How long do predictions take?
-* Are requests failing or backing up?
-* How does batch size affect latency?
+* How long do predictions take under different batch sizes?
+* Are requests backing up or failing?
+* How does service behaviour change under load?
 
-This layer turns the model into something you can reason about operationally.
+This layer turns the model into something that can be reasoned about operationally, rather than treated as a black box.
 
 ---
 
-## What this project deliberately does not do (yet)
+## Security and governance considerations
 
-Several things are intentionally out of scope for this iteration:
+Even in a local environment, the project is structured with production security and governance principles in mind.
 
-* no automated retraining
-* no feature store
-* no data drift detection
-* no alerting rules
-* no cloud deployment
-* no authentication or access control
+These include:
 
-These are not ignored — they are deferred to keep the system understandable and traceable.
+* clear separation between training and serving components
+* controlled access to inference via APIs
+* awareness of data sensitivity and payload handling
+* explicit boundaries around model exposure
+* observability as a prerequisite for trust
+
+While authentication, fine-grained access control, and cloud IAM are not implemented in this version, the architecture mirrors patterns that translate directly to secure, governed deployments in managed environments.
+
+---
+
+## What this project deliberately does not include (yet)
+
+Several features are intentionally out of scope for this version to keep the system understandable and traceable:
+
+* automated retraining pipelines
+* feature stores
+* data drift or model quality monitoring
+* alerting rules
+* cloud deployment
+* authentication and authorisation
+
+These are deferred rather than ignored and would be natural extensions of the current design.
 
 ---
 
@@ -168,34 +191,35 @@ The following limitations are documented and intentional:
 
 * inference is synchronous
 * batch size is constrained by memory and transport limits
-* model is trained once per run
-* thresholds are not tuned for business objectives
-* monitoring focuses on service health, not model quality drift
+* the model is trained once per run
+* decision thresholds are not tuned for specific business objectives
+* monitoring focuses on service health rather than model performance drift
 
-Each of these would be addressed incrementally in later iterations.
+Each of these would be addressed incrementally as the system evolves.
 
 ---
 
-## Possible next iterations
+## Possible future extensions
 
-Future extensions of this project could include:
+Potential next steps include:
 
 * asynchronous inference
-* chunked batch processing
-* model version comparison in production
-* data drift monitoring
-* alerting on latency or error rate
-* scheduled retraining
-* cloud deployment (AWS or Azure)
+* chunked or streaming batch processing
+* side-by-side model version comparison
+* data and concept drift detection
+* alerting on latency or error rates
+* scheduled retraining workflows
+* deployment to cloud platforms such as AWS or Azure
 
-The current version provides a stable foundation for those steps.
+The current implementation provides a stable and realistic base for these additions.
 
 ---
 
 ## Final note
 
-This project is intentionally **end-to-end and local**, but it mirrors real production concerns closely.
+This project is intentionally **end to end and local**, but it reflects real production concerns closely.
 
-The value is not in the model alone, but in seeing how data, models, APIs, and monitoring interact as a system.
+The value is not in the model alone, but in understanding how data, models, APIs, monitoring, and security considerations interact as a system.
 
-That is the level at which machine learning actually becomes useful.
+The current version is complete and functional, with the remaining work focused on refinement, polish, and extending the same ideas into cloud-native environments.
+
