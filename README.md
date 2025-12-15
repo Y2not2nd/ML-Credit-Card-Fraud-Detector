@@ -223,3 +223,5 @@ The value is not in the model alone, but in understanding how data, models, APIs
 
 The current version is complete and functional, with the remaining work focused on refinement, polish, and extending the same ideas into cloud-native environments.
 
+![Architecture diagram](images/dag2.png)
+
